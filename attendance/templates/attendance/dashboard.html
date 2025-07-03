@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Active Devices Dashboard</title>
@@ -12,7 +12,7 @@
     <script>
         setTimeout(function(){
             window.location.reload();
-        }, 30000); // Refresh every 30 seconds
+        }, 50000); // Refresh every 30 seconds
     </script>
     <!-- <script>
     // Refresh of local database
@@ -22,7 +22,7 @@
 </script> -->
 
 
-</head>
+<!-- </head>
 <body>
     <h2>🖥️ Active Devices (Last 0.5 Minutes)</h2>
     <table>
@@ -42,4 +42,25 @@
         {% endfor %}
     </table>
 </body>
-</html>
+</html> --> -->
+
+
+
+<h2>Welcome, {{ student.name }}</h2>
+<p>MAC: {{ student.mac_address }}</p>
+
+<h3>Attendance History</h3>
+<table border="1">
+    <tr>
+        <th>Date & Time</th>
+    </tr>
+    {% for r in records %}
+    <tr>
+        <td>{{ r.timestamp }}</td>
+    </tr>
+    {% empty %}
+    <tr><td>No attendance records found.</td></tr>
+    {% endfor %}
+</table>
+
+<a href="{% url 'login' %}">Logout</a>
