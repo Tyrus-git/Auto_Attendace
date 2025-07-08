@@ -1,12 +1,16 @@
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from datetime import timedelta
 from .models import Attendance
 #Models for attendace
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm
 from .models import Student
 from django.contrib.auth.hashers import check_password
+
+from django.utils.dateformat import format
+
+from django.utils.dateformat import format
+from datetime import datetime, time, timedelta
 
 
 def active_devices(request):
@@ -46,17 +50,31 @@ def login_view(request):
         form = LoginForm()
     return render(request, 'attendance/login.html', {'form': form})
 
+
+
+from django.utils.dateformat import format
+
 def dashboard_view(request):
     student_id = request.session.get('student_id')
     if not student_id:
         return redirect('login')
 
     student = Student.objects.get(id=student_id)
-    records = student.attendancerecord_set.all().order_by('-timestamp')
+    records = student.attendancerecord_set.order_by('-timestamp')[:10]  # last 10 records
+
+    # Convert timestamps to string for Chart.js
+    attendance_data = [
+        format(record.timestamp, 'M d, Y, H:i') for record in records
+    ]
+
     return render(request, 'attendance/dashboard.html', {
         'student': student,
-        'records': records
+        'records': records,
+        'attendance_data': attendance_data
     })
+
+
+
 
 def logout_view(request):
     request.session.flush()

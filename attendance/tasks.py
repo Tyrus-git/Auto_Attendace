@@ -3,6 +3,7 @@ import time
 from django.utils import timezone
 from attendance.models import Attendance, AttendanceRecord, Student
 
+
 def tally_attendance_loop():
     while True:
         now = timezone.now()
@@ -23,4 +24,4 @@ def tally_attendance_loop():
                         timestamp=entry.last_seen
                     )
         print("✅ [Auto Tally] Attendance updated.")
-        time.sleep(10)  # adjust this interval as needed
+        time.sleep(100)  # adjust this interval as needed

@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
             # self.stdout.write("🔍 Using default subnet: 192.168.1.x")
-            subnet = "172.16.8"
+            subnet = "192.168.0"
 
             # self.stdout.write("\n📡 Scanning ARP table...")
             # self.scan_arp_table(subnet)

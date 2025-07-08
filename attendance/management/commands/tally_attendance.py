@@ -13,10 +13,10 @@ class Command(BaseCommand):
         for entry in real_time_macs:
             student = Student.objects.filter(mac_address__iexact=entry.mac_address).first()
             if student:
-                # Prevent duplicate entry within 10 minutes
+                # Prevent duplicate entry within 30 sec
                 recent = AttendanceRecord.objects.filter(
                     student=student,
-                    timestamp__gte=now - timezone.timedelta(seconds=30)
+                    timestamp__gte=now - timezone.timedelta(minutes=1)
                 ).exists()
 
                 if not recent:
