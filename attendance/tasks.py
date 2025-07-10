@@ -13,7 +13,7 @@ def tally_attendance_loop():
             if student:
                 recent = AttendanceRecord.objects.filter(
                     student=student,
-                    timestamp__gte=now - timezone.timedelta(seconds=10)
+                    timestamp__gte=now - timezone.timedelta(seconds=60)
                 ).exists()
 
                 if not recent:

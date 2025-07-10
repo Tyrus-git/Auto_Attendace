@@ -16,7 +16,7 @@ class Command(BaseCommand):
                 # Prevent duplicate entry within 30 sec
                 recent = AttendanceRecord.objects.filter(
                     student=student,
-                    timestamp__gte=now - timezone.timedelta(minutes=1)
+                    timestamp__gte=now - timezone.timedelta(seconds=30)
                 ).exists()
 
                 if not recent:

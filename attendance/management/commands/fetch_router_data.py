@@ -80,13 +80,13 @@ class Command(BaseCommand):
                     active_ips.append(result)
 
         if active_ips:
-            self.stdout.write(f"📶 Found {len(active_ips)} active IPs.")
+            # self.stdout.write(f"📶 Found {len(active_ips)} active IPs.")
             time.sleep(2)
             self.scan_arp_table(network_base)
         else:
             self.stdout.write("⚠ No active IPs found during ping sweep.")
 
     def cleanup_old_entries(self):
-        cutoff = timezone.now() - timedelta(seconds=10)
+        cutoff = timezone.now() - timedelta(seconds=60)
         deleted, _ = Attendance.objects.filter(last_seen__lt=cutoff).delete()
         self.stdout.write(self.style.WARNING(f"🗑 Removed {deleted} stale devices."))

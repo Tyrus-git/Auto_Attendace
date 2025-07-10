@@ -11,7 +11,7 @@ from django.utils.dateformat import format
 
 from django.utils.dateformat import format
 from datetime import datetime, time, timedelta
-
+from calendar import monthrange
 
 def active_devices(request):
     # Show only devices active in the last 20 second
@@ -60,18 +60,66 @@ def dashboard_view(request):
         return redirect('login')
 
     student = Student.objects.get(id=student_id)
-    records = student.attendancerecord_set.order_by('-timestamp')[:10]  # last 10 records
+    all_records = student.attendancerecord_set.all()
 
-    # Convert timestamps to string for Chart.js
-    attendance_data = [
-        format(record.timestamp, 'M d, Y, H:i') for record in records
-    ]
+    # Filter only today's records
+    today = timezone.localdate()
+    today_start = timezone.make_aware(datetime.combine(today, time(7, 0)))
+    today_end = timezone.make_aware(datetime.combine(today, time(13, 45)))
+    today_records = all_records.filter(timestamp__range=(today_start, today_end))
+
+    # Create a presence map (set of all minute timestamps)
+    presence_minutes = set(
+        r.timestamp.replace(second=0, microsecond=0)
+        for r in today_records
+    )
+
+    # Define period ranges
+    period_ranges = {
+        'Period 1': (time(7, 0), time(8, 30)),
+        'Period 2': (time(8, 30), time(10, 0)),
+        'Break': (time(10, 0), time(10, 45)),  # We exclude this
+        'Period 3': (time(10, 45), time(12, 15)),
+        'Period 4': (time(12, 15), time(13, 45)),
+    }
+
+    period_percentages = []
+
+    for period, (start_time, end_time) in period_ranges.items():
+        if period == "Break":
+            continue  # skip break
+
+        # Get all minutes in this period
+        start_dt = timezone.make_aware(datetime.combine(today, start_time))
+        end_dt = timezone.make_aware(datetime.combine(today, end_time))
+        total_minutes = int((end_dt - start_dt).total_seconds() / 60)
+
+        present_count = 0
+        current = start_dt
+        while current <= end_dt:
+            if current.replace(second=0, microsecond=0) in presence_minutes:
+                present_count += 1
+            current += timedelta(minutes=1)
+
+        percentage = round((present_count / total_minutes) * 100, 2)
+        period_percentages.append({
+            'period': period,
+            'percentage': percentage
+        })
+
+    # Create separate lists for chart labels and data
+    labels = [p['period'] for p in period_percentages]
+    data = [p['percentage'] for p in period_percentages]
 
     return render(request, 'attendance/dashboard.html', {
         'student': student,
-        'records': records,
-        'attendance_data': attendance_data
+        'records': all_records.order_by('-timestamp'),
+        'today': timezone.now(),
+        'period_percentages': period_percentages,
+        'chart_labels': labels,
+        'chart_data': data,
     })
+
 
 
 
