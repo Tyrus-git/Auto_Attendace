@@ -124,6 +124,62 @@ def dashboard_view(request):
     })
 
 
+from collections import defaultdict
+from django.db.models.functions import TruncDate
+from .models import AttendanceRecord
+
+from collections import defaultdict
+from django.shortcuts import render, redirect
+from .models import AttendanceRecord, Student
+
+
+def attendance_history_view(request):
+    student_id = request.session.get('student_id')
+    if not student_id:
+        return redirect('login')
+
+    try:
+        student = Student.objects.get(id=student_id)
+    except Student.DoesNotExist:
+        return redirect('login')
+
+    records = AttendanceRecord.objects.filter(student=student)
+
+    daily_data = defaultdict(lambda: {'period1': False, 'period2': False, 'period3': False, 'period4': False})
+
+    for record in records:
+        date = record.timestamp.date()
+        hour = record.timestamp.hour
+        minute = record.timestamp.minute
+
+        # Period mapping as before
+        if (hour == 7 and minute >= 0) or (7 < hour < 8) or (hour == 8 and minute < 30):
+            daily_data[date]['period1'] = True
+        elif (hour == 8 and minute >= 30) or (8 < hour < 10):
+            daily_data[date]['period2'] = True
+        elif (hour == 10 and minute >= 45) or (10 < hour < 12) or (hour == 12 and minute < 15):
+            daily_data[date]['period3'] = True
+        elif (hour == 12 and minute >= 15) or (12 < hour < 13) or (hour == 13 and minute <= 45):
+            daily_data[date]['period4'] = True
+
+    attendance_table = []
+    for date, periods in sorted(daily_data.items(), reverse=True):
+        present_count = sum(periods.values())
+        percentage = round((present_count / 4) * 100)
+        attendance_table.append({
+            'date': date,
+            'p1': '✓' if periods['period1'] else '✗',
+            'p2': '✓' if periods['period2'] else '✗',
+            'p3': '✓' if periods['period3'] else '✗',
+            'p4': '✓' if periods['period4'] else '✗',
+            'percent': f'{percentage}%',
+        })
+
+    return render(request, 'attendance/history.html', {
+        'student': student,
+        'attendance_table': attendance_table
+    })
+
 
 def logout_view(request):
     request.session.flush()

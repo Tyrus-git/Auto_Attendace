@@ -8,6 +8,10 @@
 
 <canvas id="periodBarChart" width="800" height="400"></canvas>
 
+<div style="margin-top: 20px;">
+    <a href="{% url 'attendance_history' %}" class="btn btn-primary">History</a>
+</div>
+
 <!-- Load Chart.js and the Data Labels plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -57,6 +61,7 @@
     };
 
     new Chart(document.getElementById('periodBarChart'), config);
+    
 </script>
 
 
