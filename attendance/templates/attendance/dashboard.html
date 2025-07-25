@@ -1,13 +1,17 @@
 <!-- <meta http-equiv="refresh" content="10"> -->
 
 <h2>Welcome, <span class="student-name">{{ student.name }}</span></h2>
-<p>MAC: {{ student.mac_address }}</p>
 <p>Today: {{ today|date:"F j, Y - g:i A" }}</p>
 
 <h3>Today's Attendance by Period</h3>
+
+
 <canvas id="periodBarChart" width="800" height="400"></canvas>
 
+<!-- Load Chart.js and the Data Labels plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 <script>
     const labels = {{ chart_labels|safe }};
     const data = {{ chart_data|safe }};
@@ -17,8 +21,8 @@
         datasets: [{
             label: 'Attendance (%)',
             data: data,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: data.map(value => value >= 75 ? 'rgba(75, 192, 192, 0.7)' : 'rgba(255, 99, 132, 0.7)'),
+            borderColor: data.map(value => value >= 75 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'),
             borderWidth: 1
         }]
     };
@@ -27,6 +31,17 @@
         type: 'bar',
         data: chartData,
         options: {
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    color: 'black',
+                    font: {
+                        weight: 'bold'
+                    },
+                    formatter: (value) => (value >= 75 ? 'Present' : 'Absent')
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -37,11 +52,13 @@
                     }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     };
 
     new Chart(document.getElementById('periodBarChart'), config);
 </script>
+
 
 <style>
     body {

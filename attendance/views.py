@@ -53,7 +53,9 @@ def login_view(request):
 
 
 from django.utils.dateformat import format
+# from django.contrib.auth.decorators import login_required
 
+# @login_required
 def dashboard_view(request):
     student_id = request.session.get('student_id')
     if not student_id:
@@ -89,7 +91,6 @@ def dashboard_view(request):
         if period == "Break":
             continue  # skip break
 
-        # Get all minutes in this period
         start_dt = timezone.make_aware(datetime.combine(today, start_time))
         end_dt = timezone.make_aware(datetime.combine(today, end_time))
         total_minutes = int((end_dt - start_dt).total_seconds() / 60)
@@ -102,12 +103,14 @@ def dashboard_view(request):
             current += timedelta(minutes=1)
 
         percentage = round((present_count / total_minutes) * 100, 2)
+        status = "Present" if percentage >= 75 else "Absent"  # ➕ Status logic
+
         period_percentages.append({
             'period': period,
-            'percentage': percentage
+            'percentage': percentage,
+            'status': status  # ➕ Add status for each period
         })
 
-    # Create separate lists for chart labels and data
     labels = [p['period'] for p in period_percentages]
     data = [p['percentage'] for p in period_percentages]
 
@@ -119,8 +122,6 @@ def dashboard_view(request):
         'chart_labels': labels,
         'chart_data': data,
     })
-
-
 
 
 
