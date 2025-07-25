@@ -1,10 +1,9 @@
-<!-- <meta http-equiv="refresh" content="10"> -->
+<!-- Dashboard Chart Section -->
 
 <h2>Welcome, <span class="student-name">{{ student.name }}</span></h2>
 <p>Today: {{ today|date:"F j, Y - g:i A" }}</p>
 
-<h3>Today's Attendance by Period</h3>
-
+<h3 style="font-weight: bold;">Today's Attendance by Period</h3>
 
 <canvas id="periodBarChart" width="800" height="400"></canvas>
 
@@ -27,41 +26,90 @@
             data: data,
             backgroundColor: data.map(value => value >= 75 ? 'rgba(75, 192, 192, 0.7)' : 'rgba(255, 99, 132, 0.7)'),
             borderColor: data.map(value => value >= 75 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'),
-            borderWidth: 1
+            borderWidth: 2
         }]
     };
 
-    const config = {
-        type: 'bar',
-        data: chartData,
-        options: {
-            plugins: {
-                datalabels: {
-                    anchor: 'end',
-                    align: 'end',
-                    color: 'black',
+const config = {
+    type: 'bar',
+    data: chartData,
+    options: {
+        plugins: {
+            datalabels: {
+                anchor: 'end',
+                align: 'end',
+                color: '#000',
+                font: {
+                    weight: 'bold',
+                    size: 16
+                },
+                formatter: (value) => `${value}%`
+            },
+            legend: {
+                labels: {
                     font: {
+                        size: 18,
                         weight: 'bold'
-                    },
-                    formatter: (value) => (value >= 75 ? 'Present' : 'Absent')
+                    }
                 }
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Percentage Present'
-                    }
+            title: {
+                display: true,
+                text: 'Period-wise Attendance Percentage',
+                font: {
+                    size: 25,
+                    weight: 'bold',
+                    color: '#000'
+                    
                 }
             }
         },
-        plugins: [ChartDataLabels]
-    };
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    color: '#000'  // Optional: darkens tick text color
+                },
+                title: {
+                    display: true,
+                    text: 'Percentage Present',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    color: '#000'
+                }
+            },
+            x: {
+                ticks: {
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    color: '#000'
+                },
+                title: {
+                    display: true,
+                    text: 'Periods',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    color: '#000'
+                }
+            }
+        }
+    },
+    plugins: [ChartDataLabels]
+};
+
 
     new Chart(document.getElementById('periodBarChart'), config);
-    
 </script>
 
 
@@ -314,34 +362,6 @@
             opacity: 1;
         }
     }
-
-    /* Add sparkle animation */
-    /* @keyframes sparkle {
-        0%, 100% { opacity: 0; transform: scale(0); }
-        50% { opacity: 1; transform: scale(1); }
-    } */
-
-    /* body::before {
-        content: '✨';
-        position: fixed;
-        top: 20%;
-        left: 10%;
-        font-size: 2rem;
-        animation: sparkle 2s infinite, float 4s infinite ease-in-out;
-        pointer-events: none;
-        z-index: 1000;
-    } */
-
-    /* body::after {
-        content: '💫';
-        position: fixed;
-        top: 70%;
-        right: 15%;
-        font-size: 1.5rem;
-        animation: sparkle 2s infinite 1s, float 3s infinite ease-in-out 1s;
-        pointer-events: none;
-        z-index: 1000;
-    } */
 
     /* Responsive design */
     @media (max-width: 768px) {

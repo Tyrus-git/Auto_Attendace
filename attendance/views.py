@@ -53,75 +53,38 @@ def login_view(request):
 
 
 from django.utils.dateformat import format
-# from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from datetime import datetime, time, timedelta
+from .models import Student  # Make sure your Student model is correctly imported
 
-# @login_required
+from .utils import calculate_period_percentages
+
 def dashboard_view(request):
     student_id = request.session.get('student_id')
     if not student_id:
         return redirect('login')
 
     student = Student.objects.get(id=student_id)
-    all_records = student.attendancerecord_set.all()
-
-    # Filter only today's records
     today = timezone.localdate()
     today_start = timezone.make_aware(datetime.combine(today, time(7, 0)))
     today_end = timezone.make_aware(datetime.combine(today, time(13, 45)))
-    today_records = all_records.filter(timestamp__range=(today_start, today_end))
+    today_records = student.attendancerecord_set.filter(timestamp__range=(today_start, today_end))
 
-    # Create a presence map (set of all minute timestamps)
-    presence_minutes = set(
-        r.timestamp.replace(second=0, microsecond=0)
-        for r in today_records
-    )
-
-    # Define period ranges
-    period_ranges = {
-        'Period 1': (time(7, 0), time(8, 30)),
-        'Period 2': (time(8, 30), time(10, 0)),
-        'Break': (time(10, 0), time(10, 45)),  # We exclude this
-        'Period 3': (time(10, 45), time(12, 15)),
-        'Period 4': (time(12, 15), time(13, 45)),
-    }
-
-    period_percentages = []
-
-    for period, (start_time, end_time) in period_ranges.items():
-        if period == "Break":
-            continue  # skip break
-
-        start_dt = timezone.make_aware(datetime.combine(today, start_time))
-        end_dt = timezone.make_aware(datetime.combine(today, end_time))
-        total_minutes = int((end_dt - start_dt).total_seconds() / 60)
-
-        present_count = 0
-        current = start_dt
-        while current <= end_dt:
-            if current.replace(second=0, microsecond=0) in presence_minutes:
-                present_count += 1
-            current += timedelta(minutes=1)
-
-        percentage = round((present_count / total_minutes) * 100, 2)
-        status = "Present" if percentage >= 75 else "Absent"  # ➕ Status logic
-
-        period_percentages.append({
-            'period': period,
-            'percentage': percentage,
-            'status': status  # ➕ Add status for each period
-        })
+    period_percentages = calculate_period_percentages(today_records, today)
 
     labels = [p['period'] for p in period_percentages]
     data = [p['percentage'] for p in period_percentages]
 
     return render(request, 'attendance/dashboard.html', {
         'student': student,
-        'records': all_records.order_by('-timestamp'),
+        'records': student.attendancerecord_set.all().order_by('-timestamp'),
         'today': timezone.now(),
         'period_percentages': period_percentages,
         'chart_labels': labels,
         'chart_data': data,
     })
+
 
 
 from collections import defaultdict
@@ -133,52 +96,37 @@ from django.shortcuts import render, redirect
 from .models import AttendanceRecord, Student
 
 
+from .utils import calculate_period_percentages
+
 def attendance_history_view(request):
     student_id = request.session.get('student_id')
     if not student_id:
         return redirect('login')
 
-    try:
-        student = Student.objects.get(id=student_id)
-    except Student.DoesNotExist:
-        return redirect('login')
+    student = Student.objects.get(id=student_id)
+    all_records = student.attendancerecord_set.all()
+    date_set = sorted(set(record.timestamp.date() for record in all_records), reverse=True)
 
-    records = AttendanceRecord.objects.filter(student=student)
+    history = []
 
-    daily_data = defaultdict(lambda: {'period1': False, 'period2': False, 'period3': False, 'period4': False})
+    for date in date_set:
+        day_start = timezone.make_aware(datetime.combine(date, time(7, 0)))
+        day_end = timezone.make_aware(datetime.combine(date, time(13, 45)))
+        day_records = all_records.filter(timestamp__range=(day_start, day_end))
 
-    for record in records:
-        date = record.timestamp.date()
-        hour = record.timestamp.hour
-        minute = record.timestamp.minute
-
-        # Period mapping as before
-        if (hour == 7 and minute >= 0) or (7 < hour < 8) or (hour == 8 and minute < 30):
-            daily_data[date]['period1'] = True
-        elif (hour == 8 and minute >= 30) or (8 < hour < 10):
-            daily_data[date]['period2'] = True
-        elif (hour == 10 and minute >= 45) or (10 < hour < 12) or (hour == 12 and minute < 15):
-            daily_data[date]['period3'] = True
-        elif (hour == 12 and minute >= 15) or (12 < hour < 13) or (hour == 13 and minute <= 45):
-            daily_data[date]['period4'] = True
-
-    attendance_table = []
-    for date, periods in sorted(daily_data.items(), reverse=True):
-        present_count = sum(periods.values())
-        percentage = round((present_count / 4) * 100)
-        attendance_table.append({
+        period_data = calculate_period_percentages(day_records, date)
+        row = {
             'date': date,
-            'p1': '✓' if periods['period1'] else '✗',
-            'p2': '✓' if periods['period2'] else '✗',
-            'p3': '✓' if periods['period3'] else '✗',
-            'p4': '✓' if periods['period4'] else '✗',
-            'percent': f'{percentage}%',
-        })
+            'periods': [p['percentage'] for p in period_data]
+        }
+        history.append(row)
 
     return render(request, 'attendance/history.html', {
         'student': student,
-        'attendance_table': attendance_table
+        'history': history
     })
+
+
 
 
 def logout_view(request):
