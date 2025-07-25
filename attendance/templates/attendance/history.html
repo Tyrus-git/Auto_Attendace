@@ -1,0 +1,29 @@
+<h2 class="text-xl font-bold mb-4">📅 Attendance History by Day</h2>
+<table class="w-full border text-sm">
+    <thead class="bg-gray-100">
+        <tr>
+            <th class="p-2 border">Date</th>
+            <th class="p-2 border">Period 1</th>
+            <th class="p-2 border">Period 2</th>
+            <th class="p-2 border">Period 3</th>
+            <th class="p-2 border">Period 4</th>
+            <th class="p-2 border">Attendance %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in attendance_table %}
+        <tr class="hover:bg-gray-50">
+            <td class="p-2 border">{{ row.date }}</td>
+            <td class="p-2 border">{{ row.p1 }}</td>
+            <td class="p-2 border">{{ row.p2 }}</td>
+            <td class="p-2 border">{{ row.p3 }}</td>
+            <td class="p-2 border">{{ row.p4 }}</td>
+            <td class="p-2 border">{{ row.percent }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center p-4">No records found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
